@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BarkadaVault — PH Money, Expense & BNPL Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate950: '#090d16'
+          }
+        }
+      }
+    };
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-950">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- ========================================================= -->
+  <!-- AUTH VIEW (Minimalist Nickname + Password Login/Register) -->
+  <!-- ========================================================= -->
+  <section id="auth-view" class="min-h-screen flex flex-col justify-center items-center px-4 py-10">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/80">
+      <!-- Brand Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg shadow-emerald-500/20">
+            ₱
+          </div>
+          <div>
+            <h1 class="text-xl font-extrabold tracking-tight text-white">BarkadaVault</h1>
+            <p class="text-xs text-slate-400">Friends Money, Wallet & BNPL Tracker</p>
+          </div>
+        </div>
+        <span id="auth-db-badge" class="text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+          Checking DB...
+        </span>
+      </div>
+
+      <!-- Mode Switch Tabs -->
+      <div class="grid grid-cols-2 gap-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800 mb-6">
+        <button id="tab-login-btn" type="button" onclick="switchAuthMode('login')"
+          class="py-2 text-sm font-semibold rounded-lg transition bg-emerald-500 text-slate-950 shadow">
+          Sign In
+        </button>
+        <button id="tab-register-btn" type="button" onclick="switchAuthMode('register')"
+          class="py-2 text-sm font-semibold rounded-lg transition text-slate-400 hover:text-white">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+            Nickname (No Email Needed)
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 font-semibold">@</span>
+            <input id="auth-nickname" type="text" required autocomplete="username" placeholder="e.g. miguel"
+              class="w-full pl-8 pr-4 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+            Password
+          </label>
+          <input id="auth-password" type="password" required autocomplete="current-password" placeholder="••••••••"
+            class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+        </div>
+
+        <div id="auth-error" class="hidden text-xs font-medium text-rose-400 bg-rose-950/50 border border-rose-800/60 rounded-xl px-3.5 py-2.5"></div>
+
+        <button id="auth-submit-btn" type="submit"
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition">
+          Enter My Vault →
+        </button>
+      </form>
+
+      <!-- Quick Demo Friend Switcher -->
+      <div class="mt-6 pt-5 border-t border-slate-800/80">
+        <p class="text-xs text-slate-400 mb-2.5 flex items-center justify-between">
+          <span>Instant Barkada Demo Accounts:</span>
+          <span class="text-[11px] text-slate-500">pass: <code class="text-slate-300">barkada123</code></span>
+        </p>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="quickDemoLogin('miguel', 'barkada123')"
+            class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-emerald-400 transition flex items-center justify-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> @miguel
+          </button>
+          <button type="button" onclick="quickDemoLogin('bea', 'barkada123')"
+            class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-indigo-400 transition flex items-center justify-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-400"></span> @bea
+          </button>
+          <button type="button" onclick="quickDemoLogin('jules', 'barkada123')"
+            class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-amber-400 transition flex items-center justify-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span> @jules
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- MAIN APP DASHBOARD VIEW                                   -->
+  <!-- ========================================================= -->
+  <div id="app-view" class="hidden min-h-screen flex flex-col">
+
+    <!-- Top Sticky Navigation Bar -->
+    <header class="sticky top-0 z-30 glass-card border-b border-slate-800/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Brand & DB Status -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 font-extrabold text-lg shadow-md shadow-emerald-500/20">
+            ₱
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">BarkadaVault</span>
+              <button id="header-db-badge" onclick="reconnectDatabase()" title="Click to re-check XAMPP MySQL connection"
+                class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 hover:border-emerald-500/50 transition">
+                DB
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">PH Digital Wallets • Gaming & Shopping Analytics • BNPL Tracker</p>
+          </div>
+        </div>
+
+        <!-- Primary Navigation Tabs: My Vault | Savings | Shared Feed -->
+        <div class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 order-3 sm:order-2 w-full sm:w-auto justify-center gap-1">
+          <button id="nav-vault-btn" onclick="switchMainTab('vault')"
+            class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-emerald-500 text-slate-950 shadow flex items-center justify-center gap-1.5">
+            <span>🔐</span> My Vault
+          </button>
+          <button id="nav-savings-btn" onclick="switchMainTab('savings')"
+            class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+            <span>💰</span> Savings
+            <span id="savings-count-badge" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-cyan-400">0</span>
+          </button>
+          <button id="nav-feed-btn" onclick="switchMainTab('feed')"
+            class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+            <span>🌐</span> Shared Feed
+            <span id="feed-count-badge" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-emerald-400">0</span>
+          </button>
+        </div>
+
+        <!-- User Profile & Quick Logout -->
+        <div class="flex items-center gap-2.5 order-2 sm:order-3">
+          <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <div id="user-avatar" class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-slate-950 bg-emerald-400">
+              M
+            </div>
+            <div class="text-left">
+              <p id="user-nickname" class="text-xs font-bold text-white leading-none">@miguel</p>
+              <p id="header-net-worth" class="text-[11px] font-semibold text-emerald-400 leading-tight">₱0.00</p>
+            </div>
+          </div>
+          <button onclick="handleLogout()" title="Sign Out"
+            class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-800/70 text-xs font-semibold transition">
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+      <!-- HIGH-PRIORITY IN-APP DUE DATE ALERT BANNER (Within 3 Days of Due Date) -->
+      <div id="due-alert-banner" class="hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/10 border border-amber-500/50 p-4 shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start sm:items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-xl shrink-0 animate-pulse-subtle">
+              ⚠️
+            </div>
+            <div>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                Upcoming BNPL / Installment Due Alert (Within 3 Days)
+              </h3>
+              <div id="due-alert-list" class="mt-1 space-y-1 text-sm font-medium text-white"></div>
+            </div>
+          </div>
+          <button onclick="scrollToSection('bnpl-section')"
+            class="self-start sm:self-center shrink-0 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition shadow">
+            Manage Installments →
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 1: MY VAULT (Personal Private + Public Records)   -->
+      <!-- ===================================================== -->
+      <div id="vault-tab-content" class="space-y-8">
+
+        <!-- SECTION 1: WALLETS & COMBINED TOTAL NET WORTH -->
+        <section class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-emerald-400">Wallet & Bank Tracker</p>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-white">Net Worth & Accounts</h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openExpenseModal()"
+                class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
+                <span>＋</span> Log Expense
+              </button>
+              <button onclick="openLoanModal()"
+                class="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-500/20 transition flex items-center gap-1.5">
+                <span>🗓️</span> New BNPL / Installment
+              </button>
+            </div>
+          </div>
+
+          <!-- Total Net Worth Summary Banner + 5 Wallets Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <!-- Combined Net Worth Hero Card -->
+            <div class="lg:col-span-4 glass-card rounded-2xl p-5 flex flex-col justify-between border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-slate-900/90">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">Combined Total Net Worth</span>
+                  <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">5 PH Wallets</span>
+                </div>
+                <p id="vault-total-networth" class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">
+                  ₱0.00
+                </p>
+                <p class="text-xs text-slate-400 mt-1">
+                  Publicly visible to friends: <span id="vault-public-networth" class="text-emerald-400 font-semibold">₱0.00</span>
+                </p>
+              </div>
+
+              <div class="mt-5 pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span class="text-slate-400 block">This Month Outflow</span>
+                  <span id="vault-month-outflow" class="text-base font-bold text-rose-400">₱0.00</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block">Active Monthly BNPL</span>
+                  <span id="vault-monthly-bnpl" class="text-base font-bold text-amber-400">₱0.00/mo</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5 Individual Wallets (GCash, Maya, GoTyme, MariBank, Cash) -->
+            <div id="wallets-grid" class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: ANALYTICS & VISUALIZATION (CHART.JS) -->
+        <section class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-indigo-400">Chart.js Visual Intelligence</p>
+              <h2 class="text-xl font-extrabold text-white">Spending, Gaming & Shopping Analytics</h2>
+            </div>
+            <span class="text-xs text-slate-400">Real-time breakdown across categories & platforms</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Chart 1: Spending Breakdown Donut -->
+            <div class="glass-card rounded-2xl p-5 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-bold text-white">Spending Breakdown</h3>
+                  <p class="text-[11px] text-slate-400">Split by main expense category</p>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300">Donut</span>
+              </div>
+              <div class="relative h-60 flex items-center justify-center">
+                <canvas id="categoryDonutChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Gaming & Shopping Deep-Dive Bar Chart -->
+            <div class="glass-card rounded-2xl p-5 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-bold text-white">Gaming & Shopping Deep-Dive</h3>
+                  <p class="text-[11px] text-slate-400">Val, Steam, Roblox, ML, CODM & Shopee, Lazada, TikTok</p>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300">Bar</span>
+              </div>
+              <div class="relative h-60">
+                <canvas id="platformBarChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 3: Monthly Cash Outflow Trend Area/Line Chart -->
+            <div class="glass-card rounded-2xl p-5 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-bold text-white">Cash Outflow Trend</h3>
+                  <p class="text-[11px] text-slate-400">Daily spending trajectory</p>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300">Trend</span>
+              </div>
+              <div class="relative h-60">
+                <canvas id="outflowTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: BNPL & LOAN INSTALLMENT TRACKER -->
+        <section id="bnpl-section" class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-amber-400">Installment Plans & Credit</p>
+              <h2 class="text-xl font-extrabold text-white">BNPL & Loan Installment Tracker</h2>
+            </div>
+            <button onclick="openLoanModal()"
+              class="self-start sm:self-auto px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition">
+              + Track New Installment (SPayLater, TikTok PayLater, Billease, GCredit)
+            </button>
+          </div>
+
+          <div id="loans-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </section>
+
+        <!-- SECTION 4: PERSONAL EXPENSE VAULT (ALL PRIVATE + PUBLIC TRANSACTIONS) -->
+        <section class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-emerald-400">My Vault Ledger</p>
+              <h2 class="text-xl font-extrabold text-white">Personal Expense History</h2>
+            </div>
+
+            <!-- Category & Visibility Filters -->
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="vault-category-filter" onchange="renderVaultTransactions()"
+                class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="ALL">All Categories</option>
+                <option value="Food & Dining">🍔 Food & Dining</option>
+                <option value="Commute / Transport">🛵 Commute / Transport</option>
+                <option value="Online Shopping">🛍️ Online Shopping</option>
+                <option value="Gaming Spends">🎮 Gaming Spends</option>
+                <option value="Bills & Others">💡 Bills & Others</option>
+                <option value="Adjustment">⚖️ Wallet Adjustments</option>
+              </select>
+
+              <select id="vault-privacy-filter" onchange="renderVaultTransactions()"
+                class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="ALL">All Visibility (Private + Public)</option>
+                <option value="public">🌐 Public (Friends)</option>
+                <option value="private">🔒 Private (Only Me)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="vault-transactions-list" class="space-y-2.5">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 2: SAVINGS & ALKANSYA GOALS                       -->
+      <!-- ===================================================== -->
+      <div id="savings-tab-content" class="hidden space-y-8">
+        <!-- Savings Hero Header -->
+        <div class="glass-card rounded-2xl p-6 border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/90 to-emerald-950/30 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">High-Yield Digital Banks & Sinking Funds</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-0.5">Savings & Alkansya Vault 💰</h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+              Track your savings goals across <strong class="text-cyan-300">GoTyme GoSave</strong>, <strong class="text-orange-300">MariBank</strong>, <strong class="text-emerald-300">Maya Savings</strong>, and <strong class="text-blue-300">GCash GSave</strong>. Toggle goals between <span class="text-emerald-400 font-semibold">[Public (Friends)]</span> and <span class="text-amber-300 font-semibold">[Private (Only Me)]</span>.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button onclick="openSavingsModal()"
+              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 transition">
+              + New Savings Goal / Alkansya
+            </button>
+          </div>
+        </div>
+
+        <!-- Savings KPI Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="glass-card rounded-2xl p-4 border border-cyan-500/30">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Saved in Goals</span>
+            <p id="savings-total-saved" class="text-2xl font-extrabold text-white mt-1">₱0.00</p>
+            <p id="savings-total-target-sub" class="text-[11px] text-cyan-400 mt-1">of ₱0.00 combined target</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border border-emerald-500/30">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Digital Bank Balances</span>
+            <p id="savings-digital-banks-total" class="text-2xl font-extrabold text-emerald-400 mt-1">₱0.00</p>
+            <p class="text-[11px] text-slate-400 mt-1">GoTyme + MariBank + Maya</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border border-amber-500/30">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Est. Net Interest (p.a.)</span>
+            <p id="savings-annual-interest" class="text-2xl font-extrabold text-amber-300 mt-1">+₱0.00/yr</p>
+            <p id="savings-monthly-interest" class="text-[11px] text-slate-400 mt-1">~₱0.00/mo net (after 20% tax)</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border border-indigo-500/30">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Overall Goal Progress</span>
+            <p id="savings-overall-pct" class="text-2xl font-extrabold text-indigo-300 mt-1">0%</p>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2">
+              <div id="savings-overall-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Savings Goals / Sinking Funds Grid -->
+        <section class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Goal-Based Sinking Funds</p>
+              <h3 class="text-xl font-extrabold text-white">Active Savings Goals & Alkansya</h3>
+            </div>
+          </div>
+          <div id="savings-goals-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </section>
+
+        <!-- High-Yield Bank Wallets Quick Overview -->
+        <section class="space-y-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-emerald-400">Where Your Money Lives</p>
+            <h3 class="text-lg font-extrabold text-white">Savings & Wallet Accounts</h3>
+          </div>
+          <div id="savings-wallets-overview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TAB 3: SHARED FEED (Public Barkada Activity Only)     -->
+      <!-- ===================================================== -->
+      <div id="feed-tab-content" class="hidden space-y-8">
+        <!-- Barkada Public Header Banner -->
+        <div class="glass-card rounded-2xl p-5 border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900/90 to-emerald-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Barkada Social Transparency</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">Shared Friends Feed 🌐</h2>
+            <p class="text-xs text-slate-300 mt-1">
+              Showing only records marked <span class="text-emerald-400 font-semibold">[Public (Friends)]</span> across all registered friends. Anything set to <span class="text-amber-300 font-semibold">[Private (Only Me)]</span> stays hidden in your personal vault.
+            </p>
+          </div>
+          <div id="feed-friends-Writeup" class="flex flex-wrap items-center gap-1.5">
+            <!-- Friend filter pills -->
+          </div>
+        </div>
+
+        <!-- Public Wallets Shared by Friends -->
+        <section class="space-y-3">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">
+            Friends' Public Wallet Balances
+          </h3>
+          <div id="feed-wallets-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <!-- Populated via JS -->
+          </div>
+        </section>
+
+        <!-- Two-Column Feed: Public Expenses & Public BNPL Installments -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Public Expenses Stream -->
+          <div class="lg:col-span-7 space-y-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">
+              Recent Public Spends (Food, Commute, Shopping, Gaming)
+            </h3>
+            <div id="feed-transactions-list" class="space-y-2.5">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- Public BNPL / Loans & Savings Stream -->
+          <div class="lg:col-span-5 space-y-6">
+            <div class="space-y-3">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-cyan-400">
+                Friends' Public Savings Goals 💰
+              </h3>
+              <div id="feed-savings-list" class="space-y-3">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">
+                Friends' Public BNPL Installments 🗓️
+              </h3>
+              <div id="feed-loans-list" class="space-y-3">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: LOG EXPENSE                                      -->
+  <!-- ========================================================= -->
+  <div id="expense-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700/80 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-extrabold text-white">Log New Expense</h3>
+          <p class="text-xs text-slate-400">Automatically deducts from your chosen wallet</p>
+        </div>
+        <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+
+      <form id="expense-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Expense Title</label>
+          <input id="exp-title" type="text" required placeholder="e.g. Valorant Kuronami Vandal, Angkas to Makati, Samgyup"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Amount (PHP ₱)</label>
+            <input id="exp-amount" type="number" step="0.01" min="0.01" required placeholder="0.00"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Source Wallet</label>
+            <select id="exp-wallet" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="GCash">GCash</option>
+              <option value="Maya">Maya</option>
+              <option value="GoTyme">GoTyme</option>
+              <option value="MariBank">MariBank</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Category</label>
+            <select id="exp-category" onchange="updatePlatformPresets()" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="Food & Dining">🍔 Food & Dining</option>
+              <option value="Commute / Transport">🛵 Commute / Transport</option>
+              <option value="Online Shopping">🛍️ Online Shopping</option>
+              <option value="Gaming Spends">🎮 Gaming Spends</option>
+              <option value="Bills & Others">💡 Bills & Others</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Platform / App Tag</label>
+            <select id="exp-platform" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <!-- Populated dynamically by category -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Platform Tag Pills -->
+        <div id="platform-quick-pills" class="flex flex-wrap gap-1.5"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Date</label>
+            <input id="exp-date" type="date" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Visibility</label>
+            <select id="exp-visibility"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="public">🌐 Public (Friends)</option>
+              <option value="private">🔒 Private (Only Me)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeExpenseModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20">
+            Save & Deduct Wallet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: UPDATE / ADJUST WALLET BALANCE                   -->
+  <!-- ========================================================= -->
+  <div id="wallet-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700/80 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 id="wallet-modal-title" class="text-lg font-extrabold text-white">Adjust Wallet</h3>
+          <p class="text-xs text-slate-400">Set new balance or apply manual cash-in / cash-out</p>
+        </div>
+        <button onclick="closeWalletModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+
+      <form id="wallet-form" class="space-y-4">
+        <input type="hidden" id="edit-wallet-id" />
+
+        <div class="grid grid-cols-2 gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800">
+          <button type="button" id="wmode-exact-btn" onclick="setWalletAdjustMode('exact')"
+            class="py-1.5 text-xs font-bold rounded-lg bg-emerald-500 text-slate-950">
+            Set Exact Balance
+          </button>
+          <button type="button" id="wmode-delta-btn" onclick="setWalletAdjustMode('delta')"
+            class="py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white">
+            + / - Adjustment
+          </button>
+        </div>
+
+        <div>
+          <label id="wallet-amount-label" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            New Balance (PHP ₱)
+          </label>
+          <input id="edit-wallet-amount" type="number" step="0.01" required
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Note / Reason (Optional)
+          </label>
+          <input id="edit-wallet-reason" type="text" placeholder="e.g. Salary Cash-In, ATM Withdrawal"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Balance Visibility
+          </label>
+          <select id="edit-wallet-visibility"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+            <option value="public">🌐 Public (Friends can see balance)</option>
+            <option value="private">🔒 Private (Only Me)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeWalletModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm">
+            Update Wallet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: NEW BNPL / LOAN INSTALLMENT                      -->
+  <!-- ========================================================= -->
+  <div id="loan-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700/80 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-extrabold text-white">Add BNPL / Loan Installment</h3>
+          <p class="text-xs text-slate-400">Track SPayLater, TikTok PayLater, LazPayLater, Billease, GCredit</p>
+        </div>
+        <button onclick="closeLoanModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+
+      <form id="loan-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Item Name</label>
+            <input id="loan-item" type="text" required placeholder="e.g. TikTok Mechanical Keyboard"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">BNPL / Loan Platform</label>
+            <select id="loan-platform" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="TikTok PayLater">TikTok PayLater</option>
+              <option value="SPayLater">SPayLater (Shopee)</option>
+              <option value="LazPayLater">LazPayLater (Lazada)</option>
+              <option value="Billease">Billease</option>
+              <option value="GCredit">GCredit / GGives</option>
+              <option value="Maya Credit">Maya Easy Credit</option>
+              <option value="Friend Loan">Barkada / Friend Loan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Total Price (₱)</label>
+            <input id="loan-total" type="number" step="0.01" min="1" required placeholder="3600" oninput="autoComputeMonthlyDue()"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Term (Months)</label>
+            <input id="loan-term" type="number" min="1" max="60" value="6" required oninput="autoComputeMonthlyDue()"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Monthly Due (₱)</label>
+            <input id="loan-monthly" type="number" step="0.01" min="1" required placeholder="600"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Months Paid So Far</label>
+            <input id="loan-paid" type="number" min="0" max="60" value="0" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Due Day of Month (1-31)</label>
+            <input id="loan-dueday" type="number" min="1" max="31" required placeholder="15"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Visibility</label>
+            <select id="loan-visibility"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="public">🌐 Public (Friends)</option>
+              <option value="private">🔒 Private (Only Me)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeLoanModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-500/20">
+            Create Installment Tracker
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 4: MARK INSTALLMENT MONTH AS PAID (WALLET DEDUCT)   -->
+  <!-- ========================================================= -->
+  <div id="pay-loan-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700/80 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-extrabold text-white">Mark Month as Paid</h3>
+        <button onclick="closePayLoanModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+      <p id="pay-loan-summary" class="text-xs text-slate-300 mb-4"></p>
+
+      <form id="pay-loan-form" class="space-y-4">
+        <input type="hidden" id="pay-loan-id" />
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Deduct Monthly Due From Wallet:
+          </label>
+          <select id="pay-loan-wallet" required
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="GoTyme">GoTyme</option>
+            <option value="MariBank">MariBank</option>
+            <option value="Cash">Cash</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closePayLoanModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm">
+            Confirm Payment & Deduct
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 5: CREATE NEW SAVINGS GOAL / ALKANSYA               -->
+  <!-- ========================================================= -->
+  <div id="savings-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700/80 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-extrabold text-white">New Savings Goal / Alkansya</h3>
+          <p class="text-xs text-slate-400">Track sinking funds, travel funds, or emergency savings</p>
+        </div>
+        <button onclick="closeSavingsModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+
+      <form id="savings-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Goal / Alkansya Title</label>
+          <input id="sav-title" type="text" required placeholder="e.g. Barkada Japan Trip 2027, Emergency Fund, New GPU"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Savings Bank / Storage</label>
+            <select id="sav-bank" onchange="autoSetBankInterest()" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="GoTyme GoSave">GoTyme GoSave (4.0% p.a.)</option>
+              <option value="MariBank">MariBank / SeaBank (4.5% p.a.)</option>
+              <option value="Maya Savings">Maya Savings Boosted (6.0% p.a.)</option>
+              <option value="GCash GSave">GCash GSave / CIMB (2.6% p.a.)</option>
+              <option value="Cash Alkansya">Cash Alkansya (0% p.a.)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Interest Rate (% p.a.)</label>
+            <input id="sav-rate" type="number" step="0.1" min="0" max="25" value="4.0" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Target Goal Amount (₱)</label>
+            <input id="sav-target" type="number" step="0.01" min="1" required placeholder="25000"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Starting Saved Amount (₱)</label>
+            <input id="sav-current" type="number" step="0.01" min="0" value="0" required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Target Date (Optional)</label>
+            <input id="sav-date" type="date"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Visibility</label>
+            <select id="sav-visibility"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="public">🌐 Public (Friends)</option>
+              <option value="private">🔒 Private (Only Me)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeSavingsModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold text-xs sm:text-sm">
+            Create Savings Goal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 6: DEPOSIT / ADD FUNDS TO SAVINGS GOAL              -->
+  <!-- ========================================================= -->
+  <div id="deposit-savings-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700/80 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-extrabold text-white">Deposit to Savings Goal</h3>
+        <button onclick="closeDepositSavingsModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+      <p id="deposit-savings-summary" class="text-xs text-slate-300 mb-4"></p>
+
+      <form id="deposit-savings-form" class="space-y-4">
+        <input type="hidden" id="deposit-goal-id" />
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Amount to Add (PHP ₱)
+          </label>
+          <input id="deposit-goal-amount" type="number" step="0.01" min="1" required placeholder="1000.00"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+          <label class="flex items-center gap-2 text-xs text-slate-200 cursor-pointer">
+            <input id="deposit-deduct-checkbox" type="checkbox" class="rounded border-slate-700 text-cyan-500 focus:ring-cyan-500" />
+            <span>Also deduct this transfer from a source wallet</span>
+          </label>
+          <select id="deposit-source-wallet"
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500">
+            <option value="GCash">From GCash</option>
+            <option value="Maya">From Maya</option>
+            <option value="GoTyme">From GoTyme</option>
+            <option value="MariBank">From MariBank</option>
+            <option value="Cash">From Cash</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeDepositSavingsModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm">
+            Confirm Deposit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

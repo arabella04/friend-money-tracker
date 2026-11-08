@@ -1,0 +1,77 @@
+/* Custom Dark Fintech Theme & Scrollbars */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #090d16;
+  color: #f1f5f9;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.09) 0px, transparent 45%),
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.09) 0px, transparent 45%);
+  background-attachment: fixed;
+}
+
+.glass-card {
+  background: rgba(17, 24, 39, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card-hover {
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* Wallet Brand Accents */
+.wallet-gcash {
+  background: linear-gradient(135deg, rgba(0, 125, 254, 0.22) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border-color: rgba(0, 125, 254, 0.35);
+}
+.wallet-maya {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.wallet-gotyme {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border-color: rgba(6, 182, 212, 0.35);
+}
+.wallet-maribank {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.22) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+.wallet-cash {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
