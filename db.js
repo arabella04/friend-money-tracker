@@ -196,10 +196,18 @@ async function initDatabase() {
       ) ENGINE=InnoDB;
     `);
 
-    // 4. Clean up any previously seeded demo accounts ('miguel', 'bea', 'jules')
-    await pool.query(
-      `DELETE FROM users WHERE nickname IN ('miguel', 'bea', 'jules')`
+    // 4. Clean up any previously seeded demo accounts ('miguel', 'bea', 'jules') and all their child records
+    const [demoRows] = await pool.query(
+      `SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules')`
     );
+    if (demoRows.length > 0) {
+      const ids = demoRows.map(r => r.id);
+      await pool.query(`DELETE FROM transactions WHERE user_id IN (?)`, [ids]);
+      await pool.query(`DELETE FROM loans WHERE user_id IN (?)`, [ids]);
+      await pool.query(`DELETE FROM savings_goals WHERE user_id IN (?)`, [ids]);
+      await pool.query(`DELETE FROM wallets WHERE user_id IN (?)`, [ids]);
+      await pool.query(`DELETE FROM users WHERE id IN (?)`, [ids]);
+    }
 
     mode = 'mysql';
     lastMysqlError = null;
@@ -935,11 +943,14 @@ const repo = {
 
   async getSharedFeed() {
     if (mode === 'mysql') {
+      // Ensure demo users are purged if they still exist
+      await pool.query(`DELETE FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules')`).catch(() => {});
+
       const [txRows] = await pool.query(
         `SELECT t.*, DATE_FORMAT(t.tx_date, '%Y-%m-%d') AS tx_date_str, u.nickname, u.avatar_color
          FROM transactions t
          JOIN users u ON u.id = t.user_id
-         WHERE t.visibility = 'public'
+         WHERE t.visibility = 'public' AND LOWER(u.nickname) NOT IN ('miguel', 'bea', 'jules')
          ORDER BY t.tx_date DESC, t.id DESC
          LIMIT 60`
       );
@@ -947,25 +958,25 @@ const repo = {
         `SELECT l.*, u.nickname, u.avatar_color
          FROM loans l
          JOIN users u ON u.id = l.user_id
-         WHERE l.visibility = 'public'
+         WHERE l.visibility = 'public' AND LOWER(u.nickname) NOT IN ('miguel', 'bea', 'jules')
          ORDER BY l.id DESC`
       );
       const [savingsRows] = await pool.query(
         `SELECT s.*, DATE_FORMAT(s.target_date, '%Y-%m-%d') AS target_date_str, u.nickname, u.avatar_color
          FROM savings_goals s
          JOIN users u ON u.id = s.user_id
-         WHERE s.visibility = 'public'
+         WHERE s.visibility = 'public' AND LOWER(u.nickname) NOT IN ('miguel', 'bea', 'jules')
          ORDER BY s.id DESC`
       );
       const [walletRows] = await pool.query(
         `SELECT w.*, u.nickname, u.avatar_color
          FROM wallets w
          JOIN users u ON u.id = w.user_id
-         WHERE w.visibility = 'public'
+         WHERE w.visibility = 'public' AND LOWER(u.nickname) NOT IN ('miguel', 'bea', 'jules')
          ORDER BY u.nickname ASC, FIELD(w.wallet_name, 'GCash', 'Maya', 'GoTyme', 'MariBank', 'Cash')`
       );
       const [usersRows] = await pool.query(
-        `SELECT id, nickname, avatar_color, created_at FROM users ORDER BY id ASC`
+        `SELECT id, nickname, avatar_color, created_at FROM users WHERE LOWER(nickname) NOT IN ('miguel', 'bea', 'jules') ORDER BY id ASC`
       );
 
       return {
