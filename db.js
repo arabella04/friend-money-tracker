@@ -197,17 +197,11 @@ async function initDatabase() {
     `);
 
     // 4. Clean up any previously seeded demo accounts ('miguel', 'bea', 'jules') and all their child records
-    const [demoRows] = await pool.query(
-      `SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules')`
-    );
-    if (demoRows.length > 0) {
-      const ids = demoRows.map(r => r.id);
-      await pool.query(`DELETE FROM transactions WHERE user_id IN (?)`, [ids]);
-      await pool.query(`DELETE FROM loans WHERE user_id IN (?)`, [ids]);
-      await pool.query(`DELETE FROM savings_goals WHERE user_id IN (?)`, [ids]);
-      await pool.query(`DELETE FROM wallets WHERE user_id IN (?)`, [ids]);
-      await pool.query(`DELETE FROM users WHERE id IN (?)`, [ids]);
-    }
+    await pool.query(`DELETE FROM transactions WHERE user_id IN (SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules'))`).catch(() => {});
+    await pool.query(`DELETE FROM loans WHERE user_id IN (SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules'))`).catch(() => {});
+    await pool.query(`DELETE FROM savings_goals WHERE user_id IN (SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules'))`).catch(() => {});
+    await pool.query(`DELETE FROM wallets WHERE user_id IN (SELECT id FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules'))`).catch(() => {});
+    await pool.query(`DELETE FROM users WHERE LOWER(nickname) IN ('miguel', 'bea', 'jules')`).catch(() => {});
 
     mode = 'mysql';
     lastMysqlError = null;
