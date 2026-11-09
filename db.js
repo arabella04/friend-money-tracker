@@ -37,67 +37,12 @@ function formatLocalDate(daysOffset = 0) {
 }
 
 async function createSampleSeedData() {
-  const todayDay = new Date().getDate();
-  const dueIn2Days = ((todayDay + 1) % 28) + 1; // 2 days ahead safely within 1..28
-  const dueIn1Day = (todayDay % 28) + 1;
-  const dueLater = ((todayDay + 12) % 28) + 1;
-
-  const defaultPassHash = await bcrypt.hash('barkada123', 10);
-
   return {
-    users: [
-      { id: 1, nickname: 'miguel', password_hash: defaultPassHash, avatar_color: '#10b981', created_at: new Date().toISOString() },
-      { id: 2, nickname: 'bea', password_hash: defaultPassHash, avatar_color: '#6366f1', created_at: new Date().toISOString() },
-      { id: 3, nickname: 'jules', password_hash: defaultPassHash, avatar_color: '#f59e0b', created_at: new Date().toISOString() }
-    ],
-    wallets: [
-      // Miguel's Wallets
-      { id: 1, user_id: 1, wallet_name: 'GCash', balance: 8450.00, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 2, user_id: 1, wallet_name: 'Maya', balance: 14200.50, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 3, user_id: 1, wallet_name: 'GoTyme', balance: 32500.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 4, user_id: 1, wallet_name: 'MariBank', balance: 19800.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 5, user_id: 1, wallet_name: 'Cash', balance: 2350.00, visibility: 'public', updated_at: new Date().toISOString() },
-      // Bea's Wallets
-      { id: 6, user_id: 2, wallet_name: 'GCash', balance: 6120.00, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 7, user_id: 2, wallet_name: 'Maya', balance: 9500.00, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 8, user_id: 2, wallet_name: 'GoTyme', balance: 22000.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 9, user_id: 2, wallet_name: 'MariBank', balance: 11400.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 10, user_id: 2, wallet_name: 'Cash', balance: 1800.00, visibility: 'public', updated_at: new Date().toISOString() },
-      // Jules's Wallets
-      { id: 11, user_id: 3, wallet_name: 'GCash', balance: 4300.00, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 12, user_id: 3, wallet_name: 'Maya', balance: 5100.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 13, user_id: 3, wallet_name: 'GoTyme', balance: 15000.00, visibility: 'private', updated_at: new Date().toISOString() },
-      { id: 14, user_id: 3, wallet_name: 'MariBank', balance: 8750.00, visibility: 'public', updated_at: new Date().toISOString() },
-      { id: 15, user_id: 3, wallet_name: 'Cash', balance: 950.00, visibility: 'public', updated_at: new Date().toISOString() }
-    ],
-    transactions: [
-      { id: 1, user_id: 1, wallet_id: 1, wallet_name: 'GCash', title: 'Valorant Reaver Vandal Bundle VP', amount: 1490.00, category: 'Gaming Spends', platform_tag: 'Valorant', visibility: 'public', tx_date: formatLocalDate(-6), created_at: new Date().toISOString() },
-      { id: 2, user_id: 1, wallet_id: 2, wallet_name: 'Maya', title: 'Mechanical Keycaps & Coiled Cable', amount: 1280.00, category: 'Online Shopping', platform_tag: 'Shopee', visibility: 'public', tx_date: formatLocalDate(-5), created_at: new Date().toISOString() },
-      { id: 3, user_id: 1, wallet_id: 5, wallet_name: 'Cash', title: 'Samgyupsal Barkada Dinner', amount: 899.00, category: 'Food & Dining', platform_tag: 'General', visibility: 'public', tx_date: formatLocalDate(-4), created_at: new Date().toISOString() },
-      { id: 4, user_id: 1, wallet_id: 1, wallet_name: 'GCash', title: 'Angkas Rush Hour Ride to BGC', amount: 185.00, category: 'Commute / Transport', platform_tag: 'Angkas', visibility: 'public', tx_date: formatLocalDate(-3), created_at: new Date().toISOString() },
-      { id: 5, user_id: 1, wallet_id: 3, wallet_name: 'GoTyme', title: 'Steam Autumn Sale (Hades II + Balatro)', amount: 1150.00, category: 'Gaming Spends', platform_tag: 'Steam', visibility: 'private', tx_date: formatLocalDate(-2), created_at: new Date().toISOString() },
-      { id: 6, user_id: 1, wallet_id: 1, wallet_name: 'GCash', title: 'TikTok Shop Desk Mat & Monitor Lightbar', amount: 945.00, category: 'Online Shopping', platform_tag: 'TikTok', visibility: 'public', tx_date: formatLocalDate(-1), created_at: new Date().toISOString() },
-      { id: 7, user_id: 1, wallet_id: 2, wallet_name: 'Maya', title: 'GrabFood Iced Spanish Latte & Croissant', amount: 340.00, category: 'Food & Dining', platform_tag: 'Grab', visibility: 'public', tx_date: formatLocalDate(0), created_at: new Date().toISOString() },
-      { id: 8, user_id: 1, wallet_id: 1, wallet_name: 'GCash', title: 'Mobile Legends Weekly Diamond Pass + Skin', amount: 550.00, category: 'Gaming Spends', platform_tag: 'Mobile Legends', visibility: 'public', tx_date: formatLocalDate(0), created_at: new Date().toISOString() },
-      { id: 9, user_id: 2, wallet_id: 6, wallet_name: 'GCash', title: 'Lazada 11.11 Skincare Restock', amount: 1640.00, category: 'Online Shopping', platform_tag: 'Lazada', visibility: 'public', tx_date: formatLocalDate(-2), created_at: new Date().toISOString() },
-      { id: 10, user_id: 2, wallet_id: 7, wallet_name: 'Maya', title: 'Roblox 800 Robux Top-up', amount: 499.00, category: 'Gaming Spends', platform_tag: 'Roblox', visibility: 'public', tx_date: formatLocalDate(-1), created_at: new Date().toISOString() },
-      { id: 11, user_id: 3, wallet_id: 11, wallet_name: 'GCash', title: 'CODM Battle Pass & Mythic Draw', amount: 820.00, category: 'Gaming Spends', platform_tag: 'CODM', visibility: 'public', tx_date: formatLocalDate(-1), created_at: new Date().toISOString() },
-      { id: 12, user_id: 3, wallet_id: 15, wallet_name: 'Cash', title: 'LRT-2 Stored Value Card & Jeep Fare', amount: 140.00, category: 'Commute / Transport', platform_tag: 'LRT/MRT', visibility: 'public', tx_date: formatLocalDate(0), created_at: new Date().toISOString() }
-    ],
-    loans: [
-      { id: 1, user_id: 1, item_name: 'TikTok Hall-Effect Keyboard', platform: 'TikTok PayLater', total_price: 3600.00, monthly_due: 600.00, term_months: 6, months_paid: 2, due_day: dueIn2Days, visibility: 'public', last_paid_at: null, created_at: new Date().toISOString() },
-      { id: 2, user_id: 1, item_name: 'Sony WH-1000XM5 Headphones', platform: 'SPayLater', total_price: 15000.00, monthly_due: 2500.00, term_months: 6, months_paid: 4, due_day: dueIn1Day, visibility: 'private', last_paid_at: null, created_at: new Date().toISOString() },
-      { id: 3, user_id: 1, item_name: '27" 180Hz IPS Gaming Monitor', platform: 'LazPayLater', total_price: 9600.00, monthly_due: 1600.00, term_months: 6, months_paid: 3, due_day: dueLater, visibility: 'public', last_paid_at: null, created_at: new Date().toISOString() },
-      { id: 4, user_id: 2, item_name: 'Kindle Paperwhite 16GB', platform: 'Billease', total_price: 7200.00, monthly_due: 1200.00, term_months: 6, months_paid: 5, due_day: dueIn2Days, visibility: 'public', last_paid_at: null, created_at: new Date().toISOString() },
-      { id: 5, user_id: 3, item_name: 'Logitech G Pro X Superlight 2', platform: 'GCredit', total_price: 6900.00, monthly_due: 2300.00, term_months: 3, months_paid: 1, due_day: dueLater, visibility: 'public', last_paid_at: null, created_at: new Date().toISOString() }
-    ],
-    savings_goals: [
-      { id: 1, user_id: 1, title: 'Barkada Siargao / El Nido Trip', storage_bank: 'GoTyme GoSave', interest_rate: 4.00, target_amount: 25000.00, current_amount: 14500.00, target_date: formatLocalDate(75), visibility: 'public', created_at: new Date().toISOString() },
-      { id: 2, user_id: 1, title: '6-Month Emergency Buffer Fund', storage_bank: 'MariBank', interest_rate: 4.50, target_amount: 60000.00, current_amount: 32500.00, target_date: formatLocalDate(180), visibility: 'private', created_at: new Date().toISOString() },
-      { id: 3, user_id: 1, title: 'RTX 5070 Gaming PC Upgrade', storage_bank: 'Maya Savings', interest_rate: 6.00, target_amount: 38000.00, current_amount: 19800.00, target_date: formatLocalDate(120), visibility: 'public', created_at: new Date().toISOString() },
-      { id: 4, user_id: 2, title: '2NE1 / K-Pop VIP Concert Ticket Fund', storage_bank: 'GoTyme GoSave', interest_rate: 4.00, target_amount: 18000.00, current_amount: 15200.00, target_date: formatLocalDate(45), visibility: 'public', created_at: new Date().toISOString() },
-      { id: 5, user_id: 3, title: 'New iPad Air M3 Sinking Fund', storage_bank: 'MariBank', interest_rate: 4.50, target_amount: 42000.00, current_amount: 16800.00, target_date: formatLocalDate(90), visibility: 'public', created_at: new Date().toISOString() }
-    ]
+    users: [],
+    wallets: [],
+    transactions: [],
+    loans: [],
+    savings_goals: []
   };
 }
 
@@ -114,9 +59,19 @@ async function loadFallbackStore() {
   }
   try {
     const parsed = JSON.parse(fs.readFileSync(FALLBACK_FILE, 'utf8'));
-    if (!parsed.savings_goals) {
-      const seed = await createSampleSeedData();
-      parsed.savings_goals = seed.savings_goals;
+    if (!parsed.savings_goals) parsed.savings_goals = [];
+    // Remove demo accounts if present
+    const demoIds = new Set(
+      (parsed.users || [])
+        .filter(u => ['miguel', 'bea', 'jules'].includes(String(u.nickname).toLowerCase()))
+        .map(u => u.id)
+    );
+    if (demoIds.size > 0) {
+      parsed.users = (parsed.users || []).filter(u => !demoIds.has(u.id));
+      parsed.wallets = (parsed.wallets || []).filter(w => !demoIds.has(w.user_id));
+      parsed.transactions = (parsed.transactions || []).filter(t => !demoIds.has(t.user_id));
+      parsed.loans = (parsed.loans || []).filter(l => !demoIds.has(l.user_id));
+      parsed.savings_goals = (parsed.savings_goals || []).filter(s => !demoIds.has(s.user_id));
       fs.writeFileSync(FALLBACK_FILE, JSON.stringify(parsed, null, 2), 'utf8');
     }
     return parsed;
@@ -241,41 +196,10 @@ async function initDatabase() {
       ) ENGINE=InnoDB;
     `);
 
-    // 4. Seed initial sample friends & transactions if empty
-    const [existingUsers] = await pool.query('SELECT COUNT(*) AS cnt FROM users');
-    if (existingUsers[0].cnt === 0) {
-      const seed = await createSampleSeedData();
-      for (const u of seed.users) {
-        await pool.query(
-          'INSERT INTO users (id, nickname, password_hash, avatar_color) VALUES (?, ?, ?, ?)',
-          [u.id, u.nickname, u.password_hash, u.avatar_color]
-        );
-      }
-      for (const w of seed.wallets) {
-        await pool.query(
-          'INSERT INTO wallets (id, user_id, wallet_name, balance, visibility) VALUES (?, ?, ?, ?, ?)',
-          [w.id, w.user_id, w.wallet_name, w.balance, w.visibility]
-        );
-      }
-      for (const t of seed.transactions) {
-        await pool.query(
-          'INSERT INTO transactions (id, user_id, wallet_id, wallet_name, title, amount, category, platform_tag, visibility, tx_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [t.id, t.user_id, t.wallet_id, t.wallet_name, t.title, t.amount, t.category, t.platform_tag, t.visibility, t.tx_date]
-        );
-      }
-      for (const l of seed.loans) {
-        await pool.query(
-          'INSERT INTO loans (id, user_id, item_name, platform, total_price, monthly_due, term_months, months_paid, due_day, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [l.id, l.user_id, l.item_name, l.platform, l.total_price, l.monthly_due, l.term_months, l.months_paid, l.due_day, l.visibility]
-        );
-      }
-      for (const s of seed.savings_goals) {
-        await pool.query(
-          'INSERT INTO savings_goals (id, user_id, title, storage_bank, interest_rate, target_amount, current_amount, target_date, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [s.id, s.user_id, s.title, s.storage_bank, s.interest_rate, s.target_amount, s.current_amount, s.target_date, s.visibility]
-        );
-      }
-    }
+    // 4. Clean up any previously seeded demo accounts ('miguel', 'bea', 'jules')
+    await pool.query(
+      `DELETE FROM users WHERE nickname IN ('miguel', 'bea', 'jules')`
+    );
 
     mode = 'mysql';
     lastMysqlError = null;

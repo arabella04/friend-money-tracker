@@ -181,13 +181,6 @@ function switchAuthMode(mode) {
   }
 }
 
-async function quickDemoLogin(nickname, password) {
-  document.getElementById('auth-nickname').value = nickname;
-  document.getElementById('auth-password').value = password;
-  switchAuthMode('login');
-  await submitAuth(nickname, password, 'login');
-}
-
 async function submitAuth(nickname, password, mode) {
   const errEl = document.getElementById('auth-error');
   errEl.classList.add('hidden');
